@@ -79,9 +79,9 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
 - Web_part.t Web app
 
 ```
-    let () =
-      Logs.set_reporter (Logs_fmt.reporter ());
-      Lwt_main.run (web_server ~port:5000 app)
+let () =
+  Logs.set_reporter (Logs_fmt.reporter ());
+  Lwt_main.run (web_server ~port:5000 app)
 ```
 
 

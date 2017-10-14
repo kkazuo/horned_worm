@@ -84,6 +84,18 @@ let () =
   Lwt_main.run (web_server ~port:5000 app)
 ```
 
+## Compose your own parts
+
+```
+let yourapp : Web_part.t =
+  fun next ctx ->
+    (* your work here *)
+    if (* should continue *) then
+      next ctx
+    else
+      fail
+```
+
 
 ## How to start
 

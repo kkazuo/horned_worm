@@ -57,6 +57,16 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
         ]
 
 
+### web_server
+
+- ?port:int  Listening port. default is 5000
+- Web_part.t Web app
+
+    let () =
+      Logs.set_reporter (Logs_fmt.reporter ());
+      Lwt_main.run (web_server ~port:5000 app)
+
+
 ## How to start
 
 Example:

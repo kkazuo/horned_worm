@@ -56,11 +56,28 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
         ; meth `POST >=> respond_string `OK "hello, POST"
         ]
 
+### browse
+
+    let app =
+      browse "/etc"
+
+### browse_file
+
+    let app =
+      browse_file "/etc" "/hosts"
+
+### json
+
+    let app =
+      json Yojson.(`Assoc [ "hello", `String "world"
+                          ; "key", `Int 1 ])
+
 
 ### web_server
 
 - ?port:int  Listening port. default is 5000
 - Web_part.t Web app
+
 
     let () =
       Logs.set_reporter (Logs_fmt.reporter ());

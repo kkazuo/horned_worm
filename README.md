@@ -2,6 +2,9 @@
 
 A functional Web app server.
 
+Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
+
+
 ## Web Parts
 
 ### path

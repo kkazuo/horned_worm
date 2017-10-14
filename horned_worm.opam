@@ -1,0 +1,11 @@
+opam-version: "1.2"
+version: "0.1"
+maintainer: "obiwanko@me.com"
+authors: ["Kazuo Koga"]
+homepage: "https://github.com/kkazuo/horned_worm"
+bug-reports: "https://github.com/kkazuo/horned_worm/issues"
+dev-repo: "https://github.com/kkazuo/horned_worm.git"
+license: "MIT"
+build: [
+  ["jbuilder" "build" "--only" "horned_worm" "--root" "." "-j" jobs "@install"]
+]

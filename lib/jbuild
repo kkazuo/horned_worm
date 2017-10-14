@@ -1,0 +1,13 @@
+(jbuild_version 1)
+
+(library
+ ((name horned_worm)
+  (libraries (
+              batteries
+              cohttp-lwt-unix
+              logs
+              logs.fmt
+              re
+              yojson
+              ))
+  (preprocess (pps (lwt.ppx)))))

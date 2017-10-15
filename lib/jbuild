@@ -8,6 +8,7 @@
               logs
               logs.fmt
               re
+              websocket-lwt.cohttp
               yojson
               ))
   (preprocess (pps (lwt.ppx)))))

@@ -59,6 +59,12 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
         ; meth `POST >=> text "hello, POST"
         ]
 
+### log
+
+    let app =
+      log Logs.err (fun ctx m -> m "error message.")
+      >=> text "text."
+
 ### set_mime_type
 
     let app =
@@ -151,3 +157,12 @@ Example:
 ## Install
 
     opam install horned_worm
+
+## Status
+
+- alpha
+
+Todo:
+
+- more predefined Web parts.
+- needs query parm receiver.

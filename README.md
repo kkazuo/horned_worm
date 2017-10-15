@@ -181,7 +181,7 @@ let yourapp : Web_part.t =
         >=> set_header "x" "y"
       end next modified_ctx
     else
-      fail
+      Web_part.fail
 ```
 
 

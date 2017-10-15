@@ -14,6 +14,12 @@ module Http_context = struct
     ;      response : Cohttp.Response.t
     ; response_body : Cohttp_lwt_body.t
     }
+
+  let conn t = t.conn
+  let request t = t.request
+  let body t = t.body
+  let response t = t.response
+  let response_body t = t.response_body
 end
 
 module Http_task = struct
@@ -26,10 +32,9 @@ end
 
 module Web_part = struct
   type t = Http_handler.t -> Http_context.t -> Http_task.t
+
+  let fail = return None
 end
-
-
-let fail = return None
 
 
 let compose a b =
@@ -43,7 +48,7 @@ let ( >=> ) = compose
 let choose options : Web_part.t =
   fun next ctx ->
     let rec f = function
-      | [] -> fail
+      | [] -> Web_part.fail
       | x :: xs ->
         let%lwt t = x next ctx in
         match t with
@@ -58,7 +63,7 @@ let filter_p p : Web_part.t =
     if p ctx then
       next ctx
     else
-      fail
+      Web_part.fail
 
 
 let path ?(compare = String.compare) expect : Web_part.t =
@@ -93,7 +98,7 @@ let path_scanf format scanner : Web_part.t =
       with
       | Scanf.Scan_failure _
       | End_of_file
-        -> fun n c -> fail
+        -> fun n c -> Web_part.fail
     end next ctx
 
 

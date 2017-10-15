@@ -1,11 +1,11 @@
 module Http_context : sig
-  type t =
-    {          conn : Cohttp_lwt_unix.Server.conn
-    ;       request : Cohttp.Request.t
-    ;          body : Cohttp_lwt_body.t
-    ;      response : Cohttp.Response.t
-    ; response_body : Cohttp_lwt_body.t
-    }
+  type t
+
+  val conn : t -> Cohttp_lwt_unix.Server.conn
+  val request : t -> Cohttp.Request.t
+  val body : t -> Cohttp_lwt_body.t
+  val response : t -> Cohttp.Response.t
+  val response_body : t -> Cohttp_lwt_body.t
 end
 
 module Http_task : sig
@@ -18,6 +18,8 @@ end
 
 module Web_part : sig
   type t = Http_handler.t -> Http_context.t -> Http_task.t
+
+  val fail : Http_task.t
 end
 
 module Cors_config : sig
@@ -35,8 +37,6 @@ module Cors_config : sig
 
   val default : t
 end
-
-val fail : Http_task.t
 
 val compose : ('a -> 'b -> 'c) -> ('d -> 'a) -> 'd -> 'b -> 'c
 val ( >=> ) : ('a -> 'b -> 'c) -> ('d -> 'a) -> 'd -> 'b -> 'c

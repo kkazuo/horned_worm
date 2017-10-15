@@ -4,15 +4,16 @@ open Lwt.Infix
 open Cohttp
 open Cohttp_lwt
 open Cohttp_lwt_unix
+module Body = Cohttp_lwt_body
 
 
 module Http_context = struct
   type t =
     {          conn : Server.conn
     ;       request : Cohttp.Request.t
-    ;          body : Cohttp_lwt_body.t
+    ;          body : Body.t
     ;      response : Cohttp.Response.t
-    ; response_body : Cohttp_lwt_body.t
+    ; response_body : Body.t
     }
 
   let conn t = t.conn

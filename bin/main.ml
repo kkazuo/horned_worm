@@ -1,7 +1,7 @@
 open Horned_worm
 
 let app =
-  respond_string `OK "hello, world"
+  text "hello, world."
 
 let () =
   Logs.set_reporter (Logs_fmt.reporter ());

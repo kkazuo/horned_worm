@@ -155,16 +155,14 @@ let x_frame_options value : Web_part.t =
   set_header "X-Frame-Options" value
 
 
-let respond_string status body : Web_part.t =
+let respond_string body : Web_part.t =
   fun next ctx ->
-    set_status status
-      next { ctx with response_body = `String body }
+    next { ctx with response_body = `String body }
 
 
-let respond_strings status body : Web_part.t =
+let respond_strings body : Web_part.t =
   fun next ctx ->
-    set_status status
-      next { ctx with response_body = `Strings body }
+    next { ctx with response_body = `Strings body }
 
 
 let respond_file fname : Web_part.t =
@@ -185,6 +183,16 @@ let browse_file root_path fname : Web_part.t =
   let uri = Uri.of_string fname in
   let path = Server.resolve_file root_path uri in
   respond_file path
+
+
+let text body =
+  set_header_unless_exists "Content-Type" "text/plain; charset=utf-8"
+  >=> respond_string body
+
+
+let texts body =
+  set_header_unless_exists "Content-Type" "text/plain; charset=utf-8"
+  >=> respond_strings body
 
 
 let json ?(len = 128) ?(std = false) json : Web_part.t =
@@ -286,8 +294,8 @@ let simple_cors ?(config = Cors_config.default) : Web_part.t =
 
 let web_server ?(port = 5000) (app:Web_part.t) =
   let response =
-    set_mime_type "text/plain; charset=utf-8" >=>
-    respond_string `Not_found "Not found" in
+    set_status `Not_found >=>
+    text "Not found" in
   let accept = fun ctx -> return (Some ctx) in
   let callback conn request body =
     let ctx : Http_context.t =

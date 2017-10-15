@@ -61,16 +61,18 @@ val set_mime_type : string -> Web_part.t
 val x_frame_options :
   [< `ALLOW_FROM of string | `DENY | `SAMEORIGIN ] -> Web_part.t
 
-val respond_string : Cohttp.Code.status_code -> string -> Web_part.t
-val respond_strings : Cohttp.Code.status_code -> string list -> Web_part.t
+val respond_string : string -> Web_part.t
+val respond_strings : string list -> Web_part.t
 val respond_file : string -> Web_part.t
 
 val browse : string -> Web_part.t
 val browse_file : string -> string -> Web_part.t
 
+val text : string -> Web_part.t
+val texts : string list -> Web_part.t
 val json : ?len:int -> ?std:bool -> Yojson.json -> Web_part.t
-val simple_cors : ?config:Cors_config.t -> Web_part.t
 
+val simple_cors : ?config:Cors_config.t -> Web_part.t
 val secure_headers : Web_part.t
 
 val web_server : ?port:int -> Web_part.t -> unit Lwt.t

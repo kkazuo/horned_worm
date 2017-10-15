@@ -5,44 +5,47 @@ A functional Web app server.
 Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
 
 
+> Sphingids are some of the faster flying insects; some are capable of flying at over 5.3 m/s (12 miles per hour). --- [Wikipedia](https://en.wikipedia.org/wiki/Sphingidae)
+
+
 ## Web Parts
 
 ### path
 
     let app =
       path "/hello"
-      >=> respond_string `OK "hello, world"
+      >=> text "hello, world"
 
 ### path_ci
 
     let app =
       path_ci "/hello"
-      >=> respond_string `OK "hello, world"
+      >=> text "hello, world"
 
 ### path_starts
 
     let app =
       path_starts "/hello/"
-      >=> respond_string `OK "hello, world"
+      >=> text "hello, world"
 
 ### path_regex
 
     let app =
       path_regex "/hello/wo{3}rld"
-      >=> respond_string `OK "hello, world"
+      >=> text "hello, world"
 
 ### path_scanf
 
     let app =
       path_scanf "/%d/%d" begin fun x y ->
-        respond_string `OK @@ Printf.sprintf "hello, %d" (x + y)
+        text @@ Printf.sprintf "hello, %d" (x + y)
       end
 
 ### meth
 
     let app =
       meth `GET
-      >=> respond_string `OK "hello, world"
+      >=> text "hello, world"
 
 ### choose
 
@@ -50,11 +53,23 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
       choose
         [ meth `GET
           >=> choose
-            [ path "/a" >=> respond_string `OK "hello, GET a"
-            ; path "/b" >=> respond_string `OK "hello, GET b"
+            [ path "/a" >=> text "hello, GET a"
+            ; path "/b" >=> text "hello, GET b"
             ]
-        ; meth `POST >=> respond_string `OK "hello, POST"
+        ; meth `POST >=> text "hello, POST"
         ]
+
+### set_mime_type
+
+    let app =
+      set_mime_type "text/plain; charset=utf-8"
+      >=> text "text."
+
+### set_status
+
+    let app =
+      set_status `Bad_request
+      >=> text "text."
 
 ### browse
 
@@ -65,6 +80,18 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
 
     let app =
       browse_file "/etc" "/hosts"
+
+### text
+
+    let app =
+      text "hello, world."
+
+### texts
+
+    let app =
+      texts [ "hello"
+            ; ", world."
+            ]
 
 ### json
 
@@ -104,7 +131,7 @@ Example:
     open Horned_worm
 
     let app =
-      respond_string `OK "hello, world"
+      text "hello, world"
 
     let () =
       Logs.set_reporter (Logs_fmt.reporter ());

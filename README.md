@@ -71,6 +71,12 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
       set_status `Bad_request
       >=> text "text."
 
+### set_header
+
+    let app =
+      set_header "x-test" "my test header"
+      >=> text "text."
+
 ### browse
 
     let app =
@@ -118,7 +124,11 @@ let yourapp : Web_part.t =
   fun next ctx ->
     (* your work here *)
     if (* should continue *) then
-      next ctx
+      let modified_ctx = ctx in
+      begin
+        set_header "a" "b"
+        >=> set_header "x" "y"
+      end next modified_ctx
     else
       fail
 ```

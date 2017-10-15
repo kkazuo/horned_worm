@@ -47,6 +47,12 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
       meth `GET
       >=> text "hello, world"
 
+### filter_p
+
+    let app =
+      filter_p (fun ctx -> true)
+      >=> text "text."
+
 ### choose
 
     let app =

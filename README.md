@@ -89,6 +89,18 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
       set_header "x-test" "my test header"
       >=> text "text."
 
+### set_header_unless_exists
+
+    let app =
+      set_header_unless_exists "x-test" "my test header"
+      >=> text "text."
+
+### add_header
+
+    let app =
+      add_header "x-test" "my test header"
+      >=> text "text."
+
 ### browse
 
     let app =
@@ -116,6 +128,33 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
     let app =
       json Yojson.(`Assoc [ "hello", `String "world"
                           ; "key", `Int 1 ])
+
+### respond_string
+
+    let app =
+      respond_string "string"
+
+### respond_strings
+
+    let app =
+      respond_strings [ "string"; "string" ]
+
+### respond_file
+
+    let app =
+      respond_file "/etc/hosts"
+
+### simple_cors
+
+    let app =
+      simple_cors
+      >=> text "text."
+
+### secure_headers
+
+    let app =
+      secure_headers
+      >=> text "text."
 
 
 ### web_server

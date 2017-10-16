@@ -1,15 +1,12 @@
-open Lwt
-open Lwt_io
-open Lwt.Infix
+open Core
+open Async
 open Cohttp
-open Cohttp_lwt
-open Cohttp_lwt_unix
-module Body = Cohttp_lwt_body
+open Cohttp_async
 
 
 module Http_context = struct
   type t =
-    {          conn : Server.conn
+    {          conn : Socket.Address.Inet.t
     ;       request : Cohttp.Request.t
     ;          body : Body.t
     ;      response : Cohttp.Response.t
@@ -24,7 +21,7 @@ module Http_context = struct
 end
 
 module Http_task = struct
-  type t = Http_context.t option Lwt.t
+  type t = Http_context.t option Deferred.t
 end
 
 module Http_handler = struct
@@ -51,7 +48,7 @@ let choose options : Web_part.t =
     let rec f = function
       | [] -> Web_part.fail
       | x :: xs ->
-        let%lwt t = x next ctx in
+        let%bind t = x next ctx in
         match t with
         | Some _ -> return t
         | None   -> f xs
@@ -67,27 +64,30 @@ let filter_p p : Web_part.t =
       Web_part.fail
 
 
-let path ?(compare = String.compare) expect : Web_part.t =
+let path_p p : Web_part.t =
   filter_p @@ fun ctx ->
-  let path = Uri.path (Request.uri ctx.request) in
-  compare path expect == 0
+  p Uri.(path (Request.uri ctx.request))
 
 
-let path_ci =
-  path ~compare:BatString.icompare
+let path expect : Web_part.t =
+  path_p @@ String.equal expect
+
+
+let path_ci expect =
+  path_p @@ String.Caseless.equal expect
 
 
 let path_starts prefix : Web_part.t =
-  filter_p @@ fun ctx ->
-  let path = Uri.path (Request.uri ctx.request) in
-  BatString.starts_with path prefix
+  path_p @@ String.is_prefix ~prefix
+
+
+let path_starts_ci prefix : Web_part.t =
+  path_p @@ String.Caseless.is_prefix ~prefix
 
 
 let path_regex pattern : Web_part.t =
   let re = Re.compile (Re_posix.re pattern) in
-  filter_p @@ fun ctx ->
-  let path = Uri.path (Request.uri ctx.request) in
-  Re.execp re path
+  path_p @@ Re.execp re
 
 
 let path_scanf format scanner : Web_part.t =
@@ -112,7 +112,7 @@ let host hostname : Web_part.t =
   filter_p @@ fun ctx ->
   let headers = Request.headers ctx.request in
   match Header.get headers "Host" with
-  | Some v -> BatString.icompare v hostname = 0
+  | Some v -> String.Caseless.equal hostname v
   | None   -> false
 
 
@@ -125,6 +125,11 @@ let log (log:'a Logs.log) msgf : Web_part.t =
 let set_status status_code : Web_part.t =
   fun next ctx ->
     next { ctx with response = { ctx.response with status = status_code }}
+
+
+let set_encoding encoding : Web_part.t =
+  fun next ctx ->
+    next { ctx with response = { ctx.response with encoding = encoding }}
 
 
 let set_header key value : Web_part.t =
@@ -161,33 +166,36 @@ let x_frame_options value : Web_part.t =
   set_header "X-Frame-Options" value
 
 
-let respond_string body : Web_part.t =
+let respond_body body : Web_part.t =
   fun next ctx ->
-    next { ctx with response_body = `String body }
+    next { ctx with response_body = body }
+
+
+let respond_string body : Web_part.t =
+  respond_body (`String body)
 
 
 let respond_strings body : Web_part.t =
-  fun next ctx ->
-    next { ctx with response_body = `Strings body }
+  respond_body (`Strings body)
 
 
 let respond_file fname : Web_part.t =
   fun next ctx ->
     let headers = Response.headers ctx.response in
-    let%lwt res, body = Server.respond_file ~headers ~fname () in
+    let%bind res, body = Server.respond_with_file ~headers fname in
     next { ctx with response = res; response_body = body }
 
 
 let browse root_path : Web_part.t =
   fun next ctx ->
-    let path = Server.resolve_file root_path (Request.uri ctx.request) in
+    let path = Server.resolve_local_file root_path (Request.uri ctx.request) in
     respond_file path
       next ctx
 
 
 let browse_file root_path fname : Web_part.t =
   let uri = Uri.of_string fname in
-  let path = Server.resolve_file root_path uri in
+  let path = Server.resolve_local_file root_path uri in
   respond_file path
 
 
@@ -203,16 +211,9 @@ let texts body =
 
 let json ?(len = 128) ?(std = false) json : Web_part.t =
   fun next ctx ->
-    let once = ref true in
-    let stream = Lwt_stream.from_direct @@ fun () ->
-      if !once then begin
-        once := false;
-        Some Yojson.(to_string ~len ~std json)
-      end else
-        None
-    in
+    let body = Yojson.(to_string ~len ~std json) in
     set_header_unless_exists "Content-Type" "application/json; charset=utf-8"
-      next { ctx with response_body = `Stream stream }
+      next { ctx with response_body = `String body }
 
 
 let secure_headers : Web_part.t =
@@ -254,9 +255,9 @@ let simple_cors ?(config = Cors_config.default) : Web_part.t =
     | Any -> fun _ -> true
     | OneOf a ->
       let allowed =
-        BatSet.String.of_list(BatList.map BatString.lowercase_ascii a) in
+        String.Set.of_list List.(map ~f:String.lowercase a) in
       fun x ->
-        BatSet.String.mem (BatString.lowercase_ascii x) allowed
+        String.Set.mem allowed String.(lowercase x)
     | Predicate f -> f
   in
   let max_age =
@@ -298,12 +299,32 @@ let simple_cors ?(config = Cors_config.default) : Web_part.t =
           next ctx
 
 
-let web_server ?(port = 5000) (app:Web_part.t) =
+let websocket : Web_part.t =
+  meth `GET >=>
+  fun next ctx ->
+    let hs = Request.headers ctx.request in
+    match ( Cohttp.Header.get hs "sec-websocket-key"
+          , Cohttp.Header.get hs "upgrade" ) with
+    | Some key, Some upgrade when String.Caseless.equal upgrade "websocket" ->
+      let r, w = Pipe.create () in
+      Pipe.close w;
+      begin
+        set_status `Switching_protocols >=>
+        set_encoding Transfer.Unknown >=>
+        set_header "connection" "upgrade" >=>
+        set_header "upgrade" "websocket" >=>
+        set_header "Sec-WebSocket-Accept" Ws.(accept ~key) >=>
+        respond_body Body.(of_pipe r)
+      end next ctx
+    | _ -> Web_part.fail
+
+
+let web_server (app:Web_part.t) port () =
   let response =
     set_status `Not_found >=>
     text "Not found" in
   let accept = fun ctx -> return (Some ctx) in
-  let callback conn request body =
+  let callback ~body conn request =
     let ctx : Http_context.t =
       { conn = conn
       ; request = request
@@ -311,13 +332,14 @@ let web_server ?(port = 5000) (app:Web_part.t) =
       ; response = Response.make ()
       ; response_body = `Empty
       } in
-    let%lwt result = app accept ctx in
+    let%bind result = app accept ctx in
     match result with
     | Some ctx -> return (ctx.response, ctx.response_body)
     | None     ->
-      let%lwt result = response accept ctx in
+      let%bind result = response accept ctx in
       match result with
       | Some ctx -> return (ctx.response, ctx.response_body)
       | None     -> Failure "Not handled" |> raise
   in
-  Server.create ~mode:(`TCP (`Port port)) (Server.make ~callback ())
+  let%bind _ = Server.create Tcp.(on_port port) callback in
+  Deferred.never ()

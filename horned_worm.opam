@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.1.1"
+version: "0.2"
 maintainer: "obiwanko@me.com"
 authors: ["Kazuo Koga"]
 homepage: "https://github.com/kkazuo/horned_worm"
@@ -10,12 +10,14 @@ build: [
   ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "batteries"       {>= "2.7.0"}
-  "cohttp-lwt-unix" {>= "0.99.0"}
+  "base64"          {>= "2.2.0"}
+  "cohttp-async"    {>= "0.99.0"}
   "logs"            {>= "0.6.2"}
   "re"              {>= "1.7.1"}
-  "websocket-lwt"   {>= "2.10"}
+  "sha"             {>= "1.9"}
   "yojson"          {>= "1.4.0"}
+  "ppx_driver"      {>= "v0.9" & < "v0.10"}
+  "ppx_jane"        {>= "v0.9" & < "v0.10"}
   "jbuilder"        {build & >= "1.0+beta13"}
 ]
 available: [ ocaml-version >= "4.04.1" ]

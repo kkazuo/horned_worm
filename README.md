@@ -28,6 +28,12 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
       path_starts "/hello/"
       >=> text "hello, world"
 
+### path_starts_ci
+
+    let app =
+      path_starts_ci "/hello/"
+      >=> text "hello, world"
+
 ### path_regex
 
     let app =
@@ -51,6 +57,12 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
 
     let app =
       filter_p (fun ctx -> true)
+      >=> text "text."
+
+### path_p
+
+    let app =
+      path_p (fun path -> true)
       >=> text "text."
 
 ### choose
@@ -159,14 +171,9 @@ Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
 
 ### web_server
 
-- ?port:int  Listening port. default is 5000
 - Web_part.t Web app
+- int  Listening port
 
-```
-let () =
-  Logs.set_reporter (Logs_fmt.reporter ());
-  Lwt_main.run (web_server ~port:5000 app)
-```
 
 ## Compose your own parts
 
@@ -177,8 +184,8 @@ let yourapp : Web_part.t =
     if (* should continue *) then
       let modified_ctx = ctx in
       begin
-        set_header "a" "b"
-        >=> set_header "x" "y"
+        set_header "a" "b" >=>
+        set_header "x" "y"
       end next modified_ctx
     else
       Web_part.fail
@@ -189,15 +196,26 @@ let yourapp : Web_part.t =
 
 Example:
 
-    open Horned_worm
+```
+open Core
+open Async
+open Horned_worm
 
-    let app =
-      text "hello, world"
+let app =
+  meth `GET >=> path "/" >=> text "hello, world"
 
-    let () =
-      Logs.set_reporter (Logs_fmt.reporter ());
+let () =
+  Logs.set_reporter (Logs_fmt.reporter ());
 
-      Lwt_main.run (web_server app)
+  Command.(
+    run @@ async ~summary:"Start Web app"
+      Spec.(
+        empty
+        +> flag "-p" (optional_with_default 5000 int)
+          ~doc:"int Listening port"
+      )
+      (web_server app))
+```
 
 ## Install
 
@@ -211,3 +229,4 @@ Todo:
 
 - more predefined Web parts.
 - needs query parm receiver.
+- builtin websocket supports.

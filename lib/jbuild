@@ -3,12 +3,14 @@
 (library
  ((name horned_worm)
   (libraries (
-              batteries
-              cohttp-lwt-unix
+              async
+              base64
+              cohttp-async
+              core
               logs
               logs.fmt
               re
-              websocket-lwt.cohttp
+              sha
               yojson
               ))
-  (preprocess (pps (lwt.ppx)))))
+  (preprocess (pps (ppx_jane ppx_driver.runner)))))

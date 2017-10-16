@@ -1,15 +1,17 @@
+open Async
+
 module Http_context : sig
   type t
 
-  val conn : t -> Cohttp_lwt_unix.Server.conn
+  val conn : t -> Socket.Address.Inet.t
   val request : t -> Cohttp.Request.t
-  val body : t -> Cohttp_lwt_body.t
+  val body : t -> Cohttp_async.Body.t
   val response : t -> Cohttp.Response.t
-  val response_body : t -> Cohttp_lwt_body.t
+  val response_body : t -> Cohttp_async.Body.t
 end
 
 module Http_task : sig
-  type t = Http_context.t option Lwt.t
+  type t = Http_context.t option Deferred.t
 end
 
 module Http_handler : sig
@@ -43,9 +45,11 @@ val ( >=> ) : ('a -> 'b -> 'c) -> ('d -> 'a) -> 'd -> 'b -> 'c
 
 val choose : Web_part.t list -> Web_part.t
 val filter_p : (Http_context.t -> bool) -> Web_part.t
-val path : ?compare:(string -> string -> int) -> string -> Web_part.t
+val path_p : (string -> bool) -> Web_part.t
+val path : string -> Web_part.t
 val path_ci : string -> Web_part.t
 val path_starts : string -> Web_part.t
+val path_starts_ci : string -> Web_part.t
 val path_regex : string -> Web_part.t
 val path_scanf :
   ('a, Scanf.Scanning.in_channel, 'b, 'c -> Web_part.t, 'a -> 'd, 'd) format6
@@ -54,6 +58,7 @@ val meth : Cohttp.Code.meth -> Web_part.t
 val host : string -> Web_part.t
 val log : 'a Logs.log -> (Http_context.t -> ('a, unit) Logs.msgf) -> Web_part.t
 val set_status : Cohttp.Code.status_code -> Web_part.t
+val set_encoding : Cohttp.Transfer.encoding -> Web_part.t
 val set_header : string -> string -> Web_part.t
 val set_header_unless_exists : string -> string -> Web_part.t
 val add_header : string -> string -> Web_part.t
@@ -64,6 +69,7 @@ val x_frame_options :
 val respond_string : string -> Web_part.t
 val respond_strings : string list -> Web_part.t
 val respond_file : string -> Web_part.t
+val respond_body : Cohttp_async.Body.t -> Web_part.t
 
 val browse : string -> Web_part.t
 val browse_file : string -> string -> Web_part.t
@@ -75,4 +81,6 @@ val json : ?len:int -> ?std:bool -> Yojson.json -> Web_part.t
 val simple_cors : ?config:Cors_config.t -> Web_part.t
 val secure_headers : Web_part.t
 
-val web_server : ?port:int -> Web_part.t -> unit Lwt.t
+val websocket : Web_part.t
+
+val web_server : Web_part.t -> int -> unit -> unit Deferred.t

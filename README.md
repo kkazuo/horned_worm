@@ -2,7 +2,7 @@
 
 A functional Web app server.
 
-Greatly inspired by Suave.IO and GIRAFFE of F#, this is OCaml implementation.
+Greatly inspired by [Suave.IO](https://suave.io) and [GIRAFFE](https://github.com/dustinmoris/Giraffe) of F#, this is OCaml implementation.
 
 
 > Sphingids are some of the faster flying insects; some are capable of flying at over 5.3 m/s (12 miles per hour). --- [Wikipedia](https://en.wikipedia.org/wiki/Sphingidae)

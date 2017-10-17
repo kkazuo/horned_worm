@@ -11,13 +11,21 @@ module Http_context = struct
     ;          body : Body.t
     ;      response : Cohttp.Response.t
     ; response_body : Body.t
+    ;       cookies : Cookie.cookie list
+    ;    set_cookie : Cookie.Set_cookie_hdr.t String.Map.t
     }
 
   let conn t = t.conn
   let request t = t.request
   let body t = t.body
+  let cookies t = t.cookies
   let response t = t.response
   let response_body t = t.response_body
+
+  let cookie ~key t =
+    Option.(
+      List.find t.cookies ~f:(fun (k, v) -> String.equal key k)
+      >>| snd)
 end
 
 module Http_task = struct
@@ -166,6 +174,40 @@ let x_frame_options value : Web_part.t =
   set_header "X-Frame-Options" value
 
 
+let use_cookie : Web_part.t =
+  fun next ctx ->
+    let cookies =
+      ctx.request
+      |> Request.headers
+      |> Cookie.Cookie_hdr.extract
+      |> List.map ~f:(fun (key, value) ->
+          (Uri.pct_decode key, Uri.pct_decode value)) in
+    next { ctx with cookies = cookies }
+
+
+let set_cookie ?expiration ?path ?domain ?secure ?http_only
+    key value : Web_part.t =
+  fun next ctx ->
+    let key = Uri.pct_encode ~component:`Query_key key in
+    let value = Uri.pct_encode ~component:`Query_value value in
+    let data = Cookie.Set_cookie_hdr.make
+        ?expiration ?path ?domain ?secure ?http_only (key, value) in
+    next { ctx with set_cookie = Map.add ~key ~data ctx.set_cookie }
+
+
+let serialize_set_cookie set_cookie response =
+  if Map.is_empty set_cookie
+  then response
+  else
+    let headers =
+      Map.fold set_cookie
+        ~init:Response.(headers response)
+        ~f:(fun ~key ~data hs ->
+            let key, data = Cookie.Set_cookie_hdr.serialize data in
+            Header.replace hs key data) in
+    { response with headers = headers }
+
+
 let respond_body body : Web_part.t =
   fun next ctx ->
     next { ctx with response_body = body }
@@ -299,6 +341,7 @@ let simple_cors ?(config = Cors_config.default) : Web_part.t =
           next ctx
 
 
+(*
 let websocket : Web_part.t =
   meth `GET >=>
   fun next ctx ->
@@ -317,29 +360,51 @@ let websocket : Web_part.t =
         respond_body Body.(of_pipe r)
       end next ctx
     | _ -> Web_part.fail
+*)
 
 
 let web_server (app:Web_part.t) port () =
-  let response =
+  let not_handled =
     set_status `Not_found >=>
     text "Not found" in
   let accept = fun ctx -> return (Some ctx) in
+
   let callback ~body conn request =
+    (* setup fresh context *)
     let ctx : Http_context.t =
       { conn = conn
       ; request = request
       ; body = body
       ; response = Response.make ()
       ; response_body = `Empty
+      ; cookies = []
+      ; set_cookie = String.Map.empty
       } in
+    let app = choose [ app; not_handled ] in
+
+    (* run web app *)
     let%bind result = app accept ctx in
+
+    (* return response *)
     match result with
-    | Some ctx -> return (ctx.response, ctx.response_body)
-    | None     ->
-      let%bind result = response accept ctx in
-      match result with
-      | Some ctx -> return (ctx.response, ctx.response_body)
-      | None     -> Failure "Not handled" |> raise
+    | Some ctx ->
+      let response = serialize_set_cookie ctx.set_cookie ctx.response in
+      return (response, ctx.response_body)
+
+    | None -> Failure "Not handled" |> raise
   in
+
   let%bind _ = Server.create Tcp.(on_port port) callback in
   Deferred.never ()
+
+
+let run_web_server app =
+  Logs.set_reporter (Logs_fmt.reporter ());
+  Command.(
+    run @@ async ~summary:"Start Web app"
+      Spec.(
+        empty
+        +> flag "-p" (optional_with_default 5000 int)
+          ~doc:"int Listening port"
+      )
+      (web_server app))

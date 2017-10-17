@@ -6,6 +6,8 @@ module Http_context : sig
   val conn : t -> Socket.Address.Inet.t
   val request : t -> Cohttp.Request.t
   val body : t -> Cohttp_async.Body.t
+  val cookies : t -> Cohttp.Cookie.cookie list
+  val cookie : key:string -> t -> string option
   val response : t -> Cohttp.Response.t
   val response_body : t -> Cohttp_async.Body.t
 end
@@ -66,6 +68,15 @@ val set_mime_type : string -> Web_part.t
 val x_frame_options :
   [< `ALLOW_FROM of string | `DENY | `SAMEORIGIN ] -> Web_part.t
 
+val use_cookie : Web_part.t
+val set_cookie :
+  ?expiration:Cohttp.Cookie.expiration ->
+  ?path:string ->
+  ?domain:string ->
+  ?secure:bool ->
+  ?http_only:bool ->
+  string -> string -> Web_part.t
+
 val respond_string : string -> Web_part.t
 val respond_strings : string list -> Web_part.t
 val respond_file : string -> Web_part.t
@@ -81,6 +92,5 @@ val json : ?len:int -> ?std:bool -> Yojson.json -> Web_part.t
 val simple_cors : ?config:Cors_config.t -> Web_part.t
 val secure_headers : Web_part.t
 
-val websocket : Web_part.t
-
 val web_server : Web_part.t -> int -> unit -> unit Deferred.t
+val run_web_server : Web_part.t -> unit

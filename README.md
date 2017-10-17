@@ -113,6 +113,18 @@ Greatly inspired by [Suave.IO](https://suave.io) and [GIRAFFE](https://github.co
       add_header "x-test" "my test header"
       >=> text "text."
 
+### use_cookie
+
+    let app =
+      use_cookie
+      >=> text "text."
+
+### set_cookie
+
+    let app =
+      set_cookie "key" "value"
+      >=> text "text."
+
 ### browse
 
     let app =
@@ -174,6 +186,12 @@ Greatly inspired by [Suave.IO](https://suave.io) and [GIRAFFE](https://github.co
 - Web_part.t Web app
 - int  Listening port
 
+### run_web_server
+
+- app Web_part.t
+
+Simple Web_part.t runner.
+
 
 ## Compose your own parts
 
@@ -202,19 +220,31 @@ open Async
 open Horned_worm
 
 let app =
-  meth `GET >=> path "/" >=> text "hello, world"
+  choose
+    [ meth `GET >=> choose
+        [ path "/" >=> text "hello, world"
+        ; path "/cookie" >=> use_cookie >=> begin
+            let key = "test" in
+            fun next ctx ->
+              let v = Option.value Http_context.(cookie ctx ~key)
+                  ~default:"hello cookie" in
+              begin
+                set_cookie key (v ^ "!") >=>
+                text v
+              end next ctx
+          end
+        ; path_scanf "/%d/%d" begin fun x y ->
+            text (sprintf "%d + %d = %d" x y (x + y))
+          end
+        ; path_scanf "/json/%s" begin fun s ->
+            json (`Assoc ["hello", `String s])
+          end
+        ]
+    ; meth `POST >=> path "/" >=> text "hello, POST"
+    ]
 
 let () =
-  Logs.set_reporter (Logs_fmt.reporter ());
-
-  Command.(
-    run @@ async ~summary:"Start Web app"
-      Spec.(
-        empty
-        +> flag "-p" (optional_with_default 5000 int)
-          ~doc:"int Listening port"
-      )
-      (web_server app))
+  run_web_server app
 ```
 
 ## Install

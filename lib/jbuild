@@ -4,13 +4,11 @@
  ((name horned_worm)
   (libraries (
               async
-              base64
               cohttp-async
               core
               logs
               logs.fmt
               re
-              sha
               yojson
               ))
   (preprocess (pps (ppx_jane ppx_driver.runner)))))

@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.2"
+version: "0.3"
 maintainer: "obiwanko@me.com"
 authors: ["Kazuo Koga"]
 homepage: "https://github.com/kkazuo/horned_worm"
@@ -10,11 +10,9 @@ build: [
   ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "base64"          {>= "2.2.0"}
   "cohttp-async"    {>= "0.99.0"}
   "logs"            {>= "0.6.2"}
   "re"              {>= "1.7.1"}
-  "sha"             {>= "1.9"}
   "yojson"          {>= "1.4.0"}
   "ppx_driver"      {>= "v0.9" & < "v0.10"}
   "ppx_jane"        {>= "v0.9" & < "v0.10"}

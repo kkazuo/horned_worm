@@ -5,6 +5,9 @@ open Cohttp_async
 
 
 module Http_context = struct
+  module Client = Cohttp_async.Client
+  module Body = Cohttp_async.Body
+
   type t =
     {          conn : Socket.Address.Inet.t
     ;       request : Cohttp.Request.t

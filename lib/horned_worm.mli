@@ -1,15 +1,19 @@
 open Async
 
+
 module Http_context : sig
+  module Client : module type of Cohttp_async.Client
+  module Body : module type of Cohttp_async.Body
+
   type t
 
   val conn : t -> Socket.Address.Inet.t
   val request : t -> Cohttp.Request.t
-  val body : t -> Cohttp_async.Body.t
+  val body : t -> Body.t
   val cookies : t -> Cohttp.Cookie.cookie list
   val cookie : key:string -> t -> string option
   val response : t -> Cohttp.Response.t
-  val response_body : t -> Cohttp_async.Body.t
+  val response_body : t -> Body.t
 end
 
 module Http_task : sig
@@ -80,7 +84,7 @@ val set_cookie :
 val respond_string : string -> Web_part.t
 val respond_strings : string list -> Web_part.t
 val respond_file : string -> Web_part.t
-val respond_body : Cohttp_async.Body.t -> Web_part.t
+val respond_body : Http_context.Body.t -> Web_part.t
 
 val browse : string -> Web_part.t
 val browse_file : string -> string -> Web_part.t

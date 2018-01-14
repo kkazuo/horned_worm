@@ -408,6 +408,6 @@ let run_web_server app =
       Spec.(
         empty
         +> flag "-p" (optional_with_default 5000 int)
-          ~doc:"int Listening port"
+          ~doc:"int Listening port (default 5000)"
       )
       (web_server app))

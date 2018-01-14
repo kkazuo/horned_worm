@@ -10,5 +10,4 @@
               logs.fmt
               re
               yojson
-              ))
-  (preprocess (pps (ppx_jane ppx_driver.runner)))))
+              ))))

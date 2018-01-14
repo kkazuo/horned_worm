@@ -15,8 +15,6 @@ depends: [
   "logs"            {>= "0.6.2"}
   "re"              {>= "1.7.1"}
   "yojson"          {>= "1.4.0"}
-  "ppx_driver"
-  "ppx_jane"
   "jbuilder"        {build & >= "1.0+beta13"}
 ]
 available: [ ocaml-version >= "4.03.0" ]

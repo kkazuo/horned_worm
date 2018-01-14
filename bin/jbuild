@@ -2,8 +2,7 @@
 
 (executables
  ((names (main))
-  (libraries (horned_worm))
-  (preprocess (pps (ppx_jane ppx_driver.runner)))))
+  (libraries (horned_worm))))
 
 (install
  ((section bin)

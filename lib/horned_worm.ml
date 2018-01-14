@@ -59,7 +59,7 @@ let choose options : Web_part.t =
     let rec f = function
       | [] -> Web_part.fail
       | x :: xs ->
-        let%bind t = x next ctx in
+        x next ctx >>= fun t ->
         match t with
         | Some _ -> return t
         | None   -> f xs
@@ -227,7 +227,7 @@ let respond_strings body : Web_part.t =
 let respond_file fname : Web_part.t =
   fun next ctx ->
     let headers = Response.headers ctx.response in
-    let%bind res, body = Server.respond_with_file ~headers fname in
+    Server.respond_with_file ~headers fname >>= fun (res, body) ->
     next { ctx with response = res; response_body = body }
 
 
@@ -386,7 +386,7 @@ let web_server (app:Web_part.t) port () =
     let app = choose [ app; not_handled ] in
 
     (* run web app *)
-    let%bind result = app accept ctx in
+    app accept ctx >>= fun result ->
 
     (* return response *)
     match result with
@@ -397,10 +397,9 @@ let web_server (app:Web_part.t) port () =
     | None -> Failure "Not handled" |> raise
   in
 
-  let%bind _ =
-    Server.create
-      ~on_handler_error:`Ignore
-      Tcp.(Where_to_listen.of_port port) callback in
+  Server.create
+    ~on_handler_error:`Ignore
+    Tcp.(Where_to_listen.of_port port) callback >>= fun _ ->
   Deferred.never ()
 
 

@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.3.1"
+version: "0.3.2"
 maintainer: "obiwanko@me.com"
 authors: ["Kazuo Koga"]
 homepage: "https://github.com/kkazuo/horned_worm"

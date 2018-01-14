@@ -397,14 +397,17 @@ let web_server (app:Web_part.t) port () =
     | None -> Failure "Not handled" |> raise
   in
 
-  let%bind _ = Server.create Tcp.(on_port port) callback in
+  let%bind _ =
+    Server.create
+      ~on_handler_error:`Ignore
+      Tcp.(Where_to_listen.of_port port) callback in
   Deferred.never ()
 
 
 let run_web_server app =
   Logs.set_reporter (Logs_fmt.reporter ());
   Command.(
-    run @@ async ~summary:"Start Web app"
+    run @@ async_spec ~summary:"Start Web app"
       Spec.(
         empty
         +> flag "-p" (optional_with_default 5000 int)

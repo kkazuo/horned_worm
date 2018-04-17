@@ -97,7 +97,7 @@ let path_starts_ci prefix : Web_part.t =
 
 
 let path_regex pattern : Web_part.t =
-  let re = Re.compile (Re_posix.re pattern) in
+  let re = Re.compile (Re.Posix.re pattern) in
   path_p @@ Re.execp re
 
 

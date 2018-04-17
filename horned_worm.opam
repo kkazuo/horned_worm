@@ -13,7 +13,7 @@ depends: [
   "async"           {>= "v0.10.0"}
   "cohttp-async"    {>= "1.0.2"}
   "logs"            {>= "0.6.2"}
-  "re"              {>= "1.7.1"}
+  "re"              {>= "1.7.3"}
   "yojson"          {>= "1.4.0"}
   "jbuilder"        {build & >= "1.0+beta13"}
 ]

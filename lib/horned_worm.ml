@@ -195,7 +195,7 @@ let set_cookie ?expiration ?path ?domain ?secure ?http_only
     let value = Uri.pct_encode ~component:`Query_value value in
     let data = Cookie.Set_cookie_hdr.make
         ?expiration ?path ?domain ?secure ?http_only (key, value) in
-    next { ctx with set_cookie = Map.add ~key ~data ctx.set_cookie }
+    next { ctx with set_cookie = Map.set ~key ~data ctx.set_cookie }
 
 
 let serialize_set_cookie set_cookie response =

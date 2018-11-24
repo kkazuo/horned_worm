@@ -11,8 +11,9 @@ authors: ["Kazuo Koga"]
 license: "MIT"
 homepage: "https://github.com/kkazuo/horned_worm"
 bug-reports: "https://github.com/kkazuo/horned_worm/issues"
-dev-repo: "https://github.com/kkazuo/horned_worm.git"
+dev-repo: "git+https://github.com/kkazuo/horned_worm.git"
 depends: [
+  "ocaml"           {>= "4.03.0"}
   "async"           {>= "v0.11.0" & < "v0.12.0"}
   "cohttp-async"    {>= "1.0.2"}
   "logs"            {>= "0.6.2"}
@@ -23,4 +24,3 @@ depends: [
 build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
-available: [ ocaml-version >= "4.03.0" ]

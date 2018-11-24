@@ -1,11 +1,17 @@
-opam-version: "1.2"
+opam-version: "2.0"
+name: "horned_worm"
 version: "0.3.4"
+synopsis: "An easy functional Web app micro framework."
+description: """
+An easy functional Web app micro framework.
+You can create REST API server with composable functions.
+"""
 maintainer: "obiwanko@me.com"
 authors: ["Kazuo Koga"]
+license: "MIT"
 homepage: "https://github.com/kkazuo/horned_worm"
 bug-reports: "https://github.com/kkazuo/horned_worm/issues"
 dev-repo: "https://github.com/kkazuo/horned_worm.git"
-license: "MIT"
 depends: [
   "async"           {>= "v0.11.0" & < "v0.12.0"}
   "cohttp-async"    {>= "1.0.2"}

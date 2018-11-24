@@ -1,0 +1,7 @@
+(executables
+ (names main)
+ (libraries horned_worm))
+
+(install
+ (section bin)
+ (files (main.exe as horned_worm)))

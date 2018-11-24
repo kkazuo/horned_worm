@@ -1,0 +1,11 @@
+(library
+ (name horned_worm)
+ (wrapped false)
+ (public_name horned_worm)
+ (libraries async
+            cohttp-async
+            core
+            logs
+            logs.fmt
+            re
+            yojson))

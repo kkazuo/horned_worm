@@ -1,8 +1,8 @@
 build:
-	@jbuilder build @install
+	@dune build
 
 clean:
-	@jbuilder clean
+	@dune clean
 
 deps:
-	@jbuilder external-lib-deps @install
+	@dune external-lib-deps @install

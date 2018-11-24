@@ -27,7 +27,7 @@ module Http_context = struct
 
   let cookie ~key t =
     Option.(
-      List.find t.cookies ~f:(fun (k, v) -> String.equal key k)
+      List.find t.cookies ~f:(fun (k, _) -> String.equal key k)
       >>| snd)
 end
 
@@ -110,7 +110,7 @@ let path_scanf format scanner : Web_part.t =
       with
       | Scanf.Scan_failure _
       | End_of_file
-        -> fun n c -> Web_part.fail
+        -> fun _ _ -> Web_part.fail
     end next ctx
 
 
@@ -206,6 +206,7 @@ let serialize_set_cookie set_cookie response =
       Map.fold set_cookie
         ~init:Response.(headers response)
         ~f:(fun ~key ~data hs ->
+            let _ = key in
             let key, data = Cookie.Set_cookie_hdr.serialize data in
             Header.replace hs key data) in
     { response with headers = headers }
@@ -231,16 +232,17 @@ let respond_file fname : Web_part.t =
     next { ctx with response = res; response_body = body }
 
 
-let browse root_path : Web_part.t =
+let browse docroot : Web_part.t =
   fun next ctx ->
-    let path = Server.resolve_local_file root_path (Request.uri ctx.request) in
+    let uri = Request.uri ctx.request in
+    let path = Server.resolve_local_file ~docroot ~uri in
     respond_file path
       next ctx
 
 
-let browse_file root_path fname : Web_part.t =
+let browse_file docroot fname : Web_part.t =
   let uri = Uri.of_string fname in
-  let path = Server.resolve_local_file root_path uri in
+  let path = Server.resolve_local_file ~docroot ~uri in
   respond_file path
 
 

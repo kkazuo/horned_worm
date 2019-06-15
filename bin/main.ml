@@ -1,5 +1,4 @@
 open Core
-open Async
 open Horned_worm
 
 let app =

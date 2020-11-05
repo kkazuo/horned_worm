@@ -116,7 +116,7 @@ let path_scanf format scanner : Web_part.t =
 
 let meth verb : Web_part.t =
   filter_p @@ fun ctx ->
-  verb = Request.meth ctx.request
+  Poly.equal verb ctx.request.meth
 
 
 let host hostname : Web_part.t =
